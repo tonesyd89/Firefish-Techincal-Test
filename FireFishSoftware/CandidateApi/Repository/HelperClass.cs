@@ -57,8 +57,7 @@ namespace CandidateApi.Repository
             Skill skill = new Skill()
             {
                 CandidateId = reader["Id"].ToString(),
-                skill = reader["name"].ToString(),
-                SkillId = reader["skillId"].ToString()
+                skill = reader["name"].ToString()
             };
             return skill;
         }

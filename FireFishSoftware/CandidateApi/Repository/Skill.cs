@@ -22,13 +22,5 @@ namespace CandidateApi.Repository
         /// The candidate identifier.
         /// </value>
         public string CandidateId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the skill identifier.
-        /// </summary>
-        /// <value>
-        /// The skill identifier.
-        /// </value>
-        public string SkillId { get; set; }
     }
 }
