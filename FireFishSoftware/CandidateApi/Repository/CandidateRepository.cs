@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Web;
-using System.Web.Management;
 using CandidateApi.Models;
 
 namespace CandidateApi.Repository
 {
     public class CandidateRepository : ICandidateRepository
     {
-        private readonly SqlConnection _sqlConnectionconnection;
+        private static readonly string ConnectionString =
+            ConfigurationManager.ConnectionStrings["CandidateDbConnectionString"].ConnectionString;
         private readonly QueryBuilder _queryBuilder;
         private readonly Dictionary<string, string> _skillValues;
         /// <summary>
@@ -21,24 +20,29 @@ namespace CandidateApi.Repository
 
         {
             this._queryBuilder = new QueryBuilder();
-            this._sqlConnectionconnection =
-                new SqlConnection(
-                    "Data Source = localhost; Initial Catalog = Web_API_Task; Integrated Security = True");
             this._skillValues = this.GetSkills();
         }
 
         private Dictionary<string, string> GetSkills()
         {
-            Dictionary<string, string> skillsLDictionary = new Dictionary<string, string>();
-            _sqlConnectionconnection.Open();
-            SqlCommand getSkillsCommand = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSkillsListQuery), this._sqlConnectionconnection);
-            SqlDataReader dataReader = getSkillsCommand.ExecuteReader();
-            while (dataReader.Read())
-            {  
-               skillsLDictionary.Add(dataReader["id"].ToString(), dataReader["name"].ToString());
+            Dictionary<string, string> skillsDictionary = new Dictionary<string, string>();
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (SqlCommand getSkillsCommand =
+                    new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSkillsListQuery),
+                        connection))
+                {
+                    using (SqlDataReader dataReader = getSkillsCommand.ExecuteReader())
+                    {
+                        while (dataReader.Read())
+                        {
+                            skillsDictionary.Add(dataReader["id"].ToString(), dataReader["name"].ToString());
+                        }
+                    }
+                }
+                return skillsDictionary;
             }
-            _sqlConnectionconnection.Close();
-            return skillsLDictionary;
         }
 
         /// <summary>
@@ -48,56 +52,69 @@ namespace CandidateApi.Repository
         /// <returns></returns>
         public bool InsertCandidateToDatabase(Candidate candidate)
         {
-            SqlCommand insertCommand = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetInsertQuery), this._sqlConnectionconnection);
-
-            SqlCommand getMaxCandidateId = new SqlCommand(this._queryBuilder.GetSqlCommand(Table.Candidate), this._sqlConnectionconnection);
-
             try
             {
-                _sqlConnectionconnection.Open();
-                int candidateId = (int) getMaxCandidateId.ExecuteScalar();
-                candidateId++;
-                candidate.CandidateId = candidateId.ToString();
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    connection.Open();
+                    using (SqlCommand getMaxCandidateId =
+                        new SqlCommand(this._queryBuilder.GetSqlCommand(Table.Candidate), connection))
+                    {
+                        int candidateId = (int) getMaxCandidateId.ExecuteScalar();
+                        candidateId++;
+                        candidate.CandidateId = candidateId.ToString();
 
-                insertCommand.Parameters.AddRange(HelperClass.GetInsertCommandParameters(candidate));
-                insertCommand.ExecuteNonQuery();
-                _sqlConnectionconnection.Close();
+                    }
 
-                InsertCandidateSkillToDb(candidate);
+                    using (SqlCommand insertCommand =
+                        new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetInsertQuery), connection))
+                    {
+                        insertCommand.Parameters.AddRange(HelperClass.GetInsertCommandParameters(candidate));
+                        insertCommand.ExecuteNonQuery();
+                    }
 
-                return true;
+                    InsertCandidateSkillToDb(candidate);
+                    return true;
+                }
             }
             catch (Exception e)
             {
-                insertCommand.Dispose();
-                _sqlConnectionconnection.Close();
                 return false;
             }
         }
 
         private void InsertCandidateSkillToDb(Candidate candidate)
         {
-            SqlCommand getMaxCandidateSkillsId = new SqlCommand(this._queryBuilder.GetSqlCommand(Table.CandidateSkill), this._sqlConnectionconnection);
-            SqlCommand insertSkillsCommand = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetInsertSkillsQuery), this._sqlConnectionconnection);
             try
             {
-                using (_sqlConnectionconnection)
+                using (var connection = new SqlConnection(ConnectionString))
                 {
-                    _sqlConnectionconnection.Open();
-                    int skillId = (int) getMaxCandidateSkillsId.ExecuteScalar();
-
-                    insertSkillsCommand.Parameters.AddRange(
-                        HelperClass.GetInsertSkillsCommand());
+                    connection.Open();
+                    int skillId;
+                    using (SqlCommand getMaxCandidateSkillsId =
+                        new SqlCommand(this._queryBuilder.GetSqlCommand(Table.CandidateSkill), connection))
+                    {
+                         skillId = (int) getMaxCandidateSkillsId.ExecuteScalar();
+                    }
 
                     foreach (var candidateSkill in candidate.Skills)
-                    {
-                        insertSkillsCommand.Parameters["@Id"].Value = skillId++;
-                        insertSkillsCommand.Parameters["@CandidateId"].Value = candidate.CandidateId;
-                        insertSkillsCommand.Parameters["@CreatedDate"].Value = DateTime.Today;
-                        insertSkillsCommand.Parameters["@UpdatedDate"].Value = DateTime.Today;
-                        insertSkillsCommand.Parameters["@SkillId"].Value =
-                            _skillValues.FirstOrDefault(x => x.Value == candidateSkill).Key;
-                    }
+                        {
+                            using (SqlCommand insertSkillsCommand =
+                                new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetInsertSkillsQuery),
+                                    connection))
+                            {
+                                insertSkillsCommand.Parameters.AddRange(
+                                    HelperClass.GetInsertSkillsCommand());
+                                skillId++;
+                                insertSkillsCommand.Parameters["@Id"].Value = skillId;
+                                insertSkillsCommand.Parameters["@CandidateId"].Value = candidate.CandidateId;
+                                insertSkillsCommand.Parameters["@CreatedDate"].Value = DateTime.Today.ToLocalTime();
+                                insertSkillsCommand.Parameters["@UpdatedDate"].Value = DateTime.Today;
+                                insertSkillsCommand.Parameters["@SkillId"].Value =
+                                    _skillValues.FirstOrDefault(x => x.Value == candidateSkill).Key;
+                                insertSkillsCommand.ExecuteNonQuery();
+                            }
+                        }
                 }
             }
             catch (Exception e)
@@ -114,21 +131,26 @@ namespace CandidateApi.Repository
         public IEnumerable<Candidate> GetAllCandidates()
         {
             List<Candidate> candidates = new List<Candidate>();
-            SqlCommand selectCommand = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSelectAllQuery), _sqlConnectionconnection);
+            
             try
             {
-                using (_sqlConnectionconnection)
+                
+                using (var connection = new SqlConnection(ConnectionString))
                 {
-                    _sqlConnectionconnection.Open();
-                    SqlDataReader datareader = selectCommand.ExecuteReader();
+                    
+                    connection.Open();
+                    using (SqlCommand selectCommand = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSelectAllQuery),connection ))
 
-                    while (datareader.Read())
                     {
-                        var candidate = HelperClass.GetCandidate(datareader);
-                        candidates.Add(candidate);
+                        using (SqlDataReader datareader = selectCommand.ExecuteReader())
+                        {
+                            while (datareader.Read())
+                            {
+                                var candidate = HelperClass.GetCandidate(datareader);
+                                candidates.Add(candidate);
+                            }
+                        }
                     }
-
-                    _sqlConnectionconnection.Close();
 
                     List<Skill> candidateSkills = GetCandidateSkills();
 
@@ -144,10 +166,6 @@ namespace CandidateApi.Repository
                 Console.WriteLine(e);
                 //throw;
             }
-            finally
-            {
-                _sqlConnectionconnection.Close();
-            }
             return candidates;
         }
 
@@ -160,23 +178,27 @@ namespace CandidateApi.Repository
 
         {
             Candidate candidate = new Candidate();
-            SqlCommand cmdGetCandidateById = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSelectByIdQuery), _sqlConnectionconnection);
-
-            cmdGetCandidateById.Parameters.AddWithValue("@Id", id);
-
+            
             try
             {
-                using (_sqlConnectionconnection)
+                using (var connection = new SqlConnection(ConnectionString))
                 {
-                    _sqlConnectionconnection.Open();
-                    SqlDataReader dataReader = cmdGetCandidateById.ExecuteReader();
-                    while (dataReader.Read())
+                    connection.Open();
+                    
+                    using (SqlCommand cmdGetCandidateById =
+                        new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSelectByIdQuery), connection))
                     {
-                        candidate = HelperClass.GetCandidate(dataReader);
+                        cmdGetCandidateById.Parameters.AddWithValue("@Id", id);
+
+                        using (SqlDataReader dataReader = cmdGetCandidateById.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                candidate = HelperClass.GetCandidate(dataReader);
+                            }
+                        }
+
                     }
-
-                    _sqlConnectionconnection.Close();
-
                     List<Skill> candidateSkills = this.GetCandidateSkills(candidate.CandidateId);
                     SetCandidateSkills(candidateSkills, candidate);
                 }
@@ -185,81 +207,77 @@ namespace CandidateApi.Repository
             {
                 throw;
             }
-            finally
-            {
-                _sqlConnectionconnection.Close();
-            }
-
             return candidate;
         }
-
-
-     
-
+        
         /// <summary>
         /// Gets the candidate skills.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A list of skills for all candidates</returns>
         public List<Skill> GetCandidateSkills()
         {
             List<Skill> candidateSkills = new List<Skill>();
             try
             {
-                using (_sqlConnectionconnection)
+                using (var connection = new SqlConnection(ConnectionString))
                 {
-                    _sqlConnectionconnection.Open();
-                    SqlDataReader dataReader = this.GetDataReader(QueryType.GetSkillsQuery);
-                    while (dataReader.Read())
-                    {
-                        var skill = HelperClass.GetSkills(dataReader);
-                        candidateSkills.Add(skill);
-                    }
+                    connection.Open();
+                  using ( SqlCommand cmdGetSkills = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSkillsQuery), connection))
+                  {
+                      using (SqlDataReader dataReader = cmdGetSkills.ExecuteReader())
+                      {
+                          while (dataReader.Read())
+                          {
+                              var skill = HelperClass.GetSkills(dataReader);
+                              candidateSkills.Add(skill);
+                          }
+                      }
+                  }
                 }
             }
             catch (Exception e)
             {
-                _sqlConnectionconnection.Close();
                 Console.WriteLine(e);
                 throw;
             }
-
-            _sqlConnectionconnection.Close();
             return candidateSkills;
         }
 
         /// <summary>
-        /// Gets the candidate skills.
+        /// Gets the candidate skills for a given candidate.
         /// </summary>
         /// <param name="candidateId">The candidate identifier.</param>
-        /// <returns></returns>
+        /// <returns>A list of skills for a given candidate </returns>
         public List<Skill> GetCandidateSkills(string candidateId)
         {
             List<Skill> candidateSkills = new List<Skill>();
-
-            SqlCommand cmdGetSkills = new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSkillsByIdQuery), _sqlConnectionconnection);
-
-            cmdGetSkills.Parameters.AddWithValue("@Id", candidateId);
+            
             try
             {
-                using (_sqlConnectionconnection)
+                using (var connection = new SqlConnection(ConnectionString))
                 {
-                    _sqlConnectionconnection.Open();
-                    SqlDataReader dataReader = cmdGetSkills.ExecuteReader();
-                    while (dataReader.Read())
+                    connection.Open();
+                    using (SqlCommand cmdGetSkills =
+                        new SqlCommand(this._queryBuilder.GetSqlCommand(QueryType.GetSkillsByIdQuery), connection))
                     {
-                        var skill = HelperClass.GetSkills(dataReader);
-                        candidateSkills.Add(skill);
+                        cmdGetSkills.Parameters.AddWithValue("@Id", candidateId);
+
+                        using (SqlDataReader dataReader = cmdGetSkills.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                var skill = HelperClass.GetSkills(dataReader);
+                                candidateSkills.Add(skill);
+                            }
+                        }
                     }
                 }
             }
             catch (Exception e)
             {
-                _sqlConnectionconnection.Close();
                 Console.WriteLine(e);
                 throw;
             }
-
-            _sqlConnectionconnection.Close();
             return candidateSkills;
         }
 
@@ -277,17 +295,6 @@ namespace CandidateApi.Repository
                     candidate.Skills.Add(candidateSkill.skill);
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets the data reader.
-        /// </summary>
-        /// <param name="queryType">Type of the query.</param>
-        /// <returns>A data Reader containing the data set for the given guery type</returns>
-        private SqlDataReader GetDataReader(QueryType queryType)
-        {
-            SqlCommand command = new SqlCommand(this._queryBuilder.GetSqlCommand(queryType), _sqlConnectionconnection);
-            return command.ExecuteReader();
         }
     }
 }
