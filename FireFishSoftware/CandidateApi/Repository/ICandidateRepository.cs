@@ -32,7 +32,7 @@ namespace CandidateApi.Repository
         /// <param name="updateCandidate">The updateCandidate.</param>
         /// <returns>True if candidate updated successfully
         /// false if candidate not updated</returns>
-        bool UpdateCandidate(Candidate updateCandidate);
+        bool UpdateCandidate(string id, Candidate updateCandidate);
 
         /// <summary>
         /// Inserts the into candidate skill.

@@ -33,7 +33,7 @@ namespace CandidateApi.Controllers
 
         // GET api/values
         public IEnumerable<Candidate> Get()
-        {
+    {
             List<Candidate> candidates = new List<Candidate>();
             try
             {
@@ -78,11 +78,11 @@ namespace CandidateApi.Controllers
         }
 
         // PUT api/values/5
-        public void Put([FromBody] Candidate candidate)
+        public void Put([FromBody] string id,  Candidate candidate)
         {
             try
             {
-                this.candidateRepository.UpdateCandidate(candidate);
+                this.candidateRepository.UpdateCandidate(id, candidate);
             }
             catch (Exception e)
             {

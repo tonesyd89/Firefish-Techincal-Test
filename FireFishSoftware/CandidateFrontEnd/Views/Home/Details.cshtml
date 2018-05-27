@@ -1,0 +1,114 @@
+﻿@model CandidateApi.Models.Candidate
+
+@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Candidate</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.FirstName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.FirstName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Surname)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Surname)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DateOfBirth)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DateOfBirth)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Address1)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Address1)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Town)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Town)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Country)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Country)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Postcode)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Postcode)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.PhoneHome)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PhoneHome)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.PhoneMobile)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PhoneMobile)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.PhoneWork)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PhoneWork)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.UpdatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.UpdatedDate)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Back to List", "Index")
+</p>

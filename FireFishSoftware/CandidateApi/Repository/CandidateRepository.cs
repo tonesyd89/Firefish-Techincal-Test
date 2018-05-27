@@ -235,11 +235,11 @@ namespace CandidateApi.Repository
         /// <param name="updateCandidate">The updateCandidate.</param>
         /// <returns>True if candidate updated successfully
         /// false if candidate not updated</returns>
-        public bool UpdateCandidate(Candidate updateCandidate)
+        public bool UpdateCandidate(string candidateId, Candidate updateCandidate)
         {
             try
             {
-                string candidateId = updateCandidate.CandidateId;
+                //string candidateId = updateCandidate.CandidateId;
                 int skillsCount = GetCandidateSkills(candidateId).Count;
                
                 using (var connection = new SqlConnection(ConnectionString))
