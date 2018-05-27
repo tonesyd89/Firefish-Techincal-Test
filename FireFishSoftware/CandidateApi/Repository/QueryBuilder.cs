@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
-using Microsoft.Ajax.Utilities;
+using System.Text;
+using CandidateApi.Models;
 
 namespace CandidateApi.Repository
 {
     public class QueryBuilder
-    {       
+    {
+        /// <summary>
+        /// Gets the SQL command.
+        /// </summary>
+        /// <param name="query">The query.</param>
+        /// <returns></returns>
         public string GetSqlCommand(QueryType query)
         {
             switch (query)
@@ -27,20 +28,42 @@ namespace CandidateApi.Repository
                 case QueryType.GetInsertSkillsQuery:
                     return this.GetInsertSkillsQuery();
                 case QueryType.GetSkillsListQuery:
-                    return this.getSkillsListQuery();
+                    return this.GetSkillsListQuery();
+                case QueryType.GetCreatedDateQuery:
+                    return this.GetCreatedDatequery();
                 default:
                     return string.Empty;
             }
         }
 
-        private string getSkillsListQuery()
-        {
-            return "SELECT * from [dbo].[Skill]";
-        }
-
+        /// <summary>
+        /// Gets the SQL command.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <returns></returns>
         public string GetSqlCommand(Table table)
         {
             return this.GetMaxTableId(table);
+        }
+
+        /// <summary>
+        /// Gets the update candidate command.
+        /// </summary>
+        /// <param name="candidateUpdate">The candidate update.</param>
+        /// <returns> a query string to update the candidate table</returns>
+        public string UpdateCandidate(Candidate candidateUpdate)
+        {
+            StringBuilder sqlUpdateQuery = new StringBuilder();
+      
+            sqlUpdateQuery.Append("UPDATE Candidate ");
+            sqlUpdateQuery.Append(BuildUpdateSetString(candidateUpdate));
+
+            return sqlUpdateQuery.ToString();
+        }
+
+        private string GetSkillsListQuery()
+        {
+            return "SELECT * from [dbo].[Skill]";
         }
 
         private string GetInsertSkillsQuery()
@@ -148,6 +171,74 @@ namespace CandidateApi.Repository
         private string GetSelectAllCommand()
         {
             return "SELECT * from Candidate";
+        }
+
+        private string GetCreatedDatequery()
+        {
+            return "SELECT createdDate FROM Candidate WHERE id = @id";
+        }
+
+        private static string BuildUpdateSetString(Candidate candidateUpdate)
+        {
+            StringBuilder setString = new StringBuilder("SET ");
+
+           
+                if (candidateUpdate.FirstName != null)
+                {
+                    setString.Append("FirstName = @FirstName" + ",");
+                }
+
+                if (candidateUpdate.Surname != null)
+                {
+                    setString.Append("Surname = @Surname"  + ",");
+                }
+
+                if (candidateUpdate.DateOfBirth != default(DateTime))
+                {
+                    setString.Append("DateOfBirth = @DateOfBirth" + ",");
+                }
+
+                if (candidateUpdate.Address1 != null)
+                {
+                    setString.Append("Address1 = @Address1" + ",");
+                }
+
+                if (candidateUpdate.Town != null)
+                {
+                    setString.Append("Town = @Town" + ",");
+                }
+
+                if (candidateUpdate.Country != null)
+                {
+                    setString.Append("Country = @Country" + ",");
+                }
+
+                if (candidateUpdate.Postcode != null)
+                {
+                    setString.Append("Postcode = @Postcode" + ",");
+                }
+
+                if (candidateUpdate.PhoneHome != null)
+                {
+                    setString.Append("PhoneHome = @PhoneHome" + ",");
+                }
+
+                if (candidateUpdate.PhoneMobile != null)
+                {
+                    setString.Append("PhoneMobile = @PhoneMobile" + ",");
+                }
+
+                if (candidateUpdate.PhoneWork != null)
+                {
+                    setString.Append("PhoneWork = @PhoneWork" + ",");
+                }
+           
+            setString.Append("UpdatedDate = @UpdatedDate" +",");
+            setString.Append("CreatedDate = @CreatedDate" + ",");
+
+            setString.Append(" WHERE Id = @id");
+            int indexOfLastComma = setString.ToString().LastIndexOf(',');
+            return setString.ToString().Remove(indexOfLastComma, 1);
         }
     }
 }

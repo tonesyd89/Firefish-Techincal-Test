@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Web;
 using CandidateApi.Models;
 
@@ -11,7 +12,7 @@ namespace CandidateApi.Repository
 {
     public class HelperClass
     {
-        public static SqlParameter[] GetInsertCommandParameters(Candidate candidate)
+        public static SqlParameter[] GetCandidateParameters(Candidate candidate)
         {
             return new SqlParameter[]
             {
@@ -26,12 +27,71 @@ namespace CandidateApi.Repository
                 new SqlParameter("@PhoneHome", candidate.PhoneHome),
                 new SqlParameter("@PhoneMobile", candidate.PhoneMobile),
                 new SqlParameter("@PhoneWork", candidate.PhoneWork),
-                new SqlParameter("@CreatedDate", candidate.CreatedDate),
-                new SqlParameter("@UpdatedDate", candidate.UpdatedDate),
+                new SqlParameter("@CreatedDate", DateTime.Now),
+                new SqlParameter("@UpdatedDate", DateTime.Now),
             };
         }
 
-        public static Candidate GetCandidate(SqlDataReader datareader)
+        public static SqlParameter[] GetCandidateUpdateParameters(Candidate candidate)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>();
+
+            if (candidate.FirstName != null)
+            {
+                parameters.Add(new SqlParameter("@FirstName", candidate.FirstName));
+            }
+
+            if (candidate.Surname != null)
+            {
+                parameters.Add(new SqlParameter("@Surname", candidate.Surname));
+            }
+
+            if (candidate.DateOfBirth != default(DateTime))
+            {
+                parameters.Add(new SqlParameter("@DateOfBirth", candidate.DateOfBirth));
+            }
+
+            if (candidate.Address1 != null)
+            {
+                parameters.Add(new SqlParameter("@Address1", candidate.Address1));
+            }
+
+            if (candidate.Town != null)
+            {
+                parameters.Add(new SqlParameter("@Town", candidate.Town));
+            }
+
+            if (candidate.Country != null)
+            {
+                parameters.Add(new SqlParameter("@Country", candidate.Country));
+            }
+
+            if (candidate.Postcode != null)
+            {
+                parameters.Add(new SqlParameter("@Postcode", candidate.Postcode));
+            }
+
+            if (candidate.PhoneHome != null)
+            {
+                parameters.Add(new SqlParameter("@PhoneHome", candidate.PhoneHome));
+            }
+
+            if (candidate.PhoneMobile != null)
+            {
+                parameters.Add(new SqlParameter("@PhoneMobile", candidate.PhoneMobile));
+            }
+
+            if (candidate.PhoneWork != null)
+            {
+                parameters.Add(new SqlParameter("@PhoneWork", candidate.PhoneWork));
+            }
+
+            parameters.Add(new SqlParameter("@Id", candidate.CandidateId));
+            parameters.Add(new SqlParameter("@UpdatedDate", DateTime.Now));
+            return parameters.ToArray();
+        }
+    
+    public static Candidate GetCandidate(SqlDataReader datareader)
         {
             Candidate candidate = new Candidate()
             {
@@ -66,7 +126,7 @@ namespace CandidateApi.Repository
         /// Gets the insert skills command.
         /// </summary>
         /// <returns></returns>
-        public static SqlParameter[] GetInsertSkillsCommand()
+        public static SqlParameter[] GetInsertSkillsParameters()
         {
             return new SqlParameter[]
             {

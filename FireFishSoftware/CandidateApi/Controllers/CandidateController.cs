@@ -14,11 +14,18 @@ namespace CandidateApi.Controllers
     {
         private ICandidateRepository candidateRepository;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CandidateController"/> class.
+        /// </summary>
         public CandidateController():this(new CandidateRepository())
         {
             
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CandidateController"/> class.
+        /// </summary>
+        /// <param name="candidateRepository">The candidate repository.</param>
         public CandidateController(ICandidateRepository candidateRepository)
         {
             this.candidateRepository = candidateRepository;
@@ -27,12 +34,24 @@ namespace CandidateApi.Controllers
         // GET api/values
         public IEnumerable<Candidate> Get()
         {
-            List<Candidate> candidates = this.candidateRepository.GetAllCandidates().ToList();
-            return candidates;
-            //return new string[] { "value1", "value2" };
+            List<Candidate> candidates = new List<Candidate>();
+            try
+            {
+                candidates = this.candidateRepository.GetAllCandidates().ToList();
+            }
+            catch (Exception e)
+            {
+                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Get response failed. Message: {e.Message}'"),
+                    ReasonPhrase = ""
+                };
+                throw new HttpResponseException(resp);
+            }
 
+            return candidates;
         }
-        
+
         // GET api/values/5
         public Candidate Get(int id)
         {
@@ -41,19 +60,39 @@ namespace CandidateApi.Controllers
         }
 
         // POST api/values
-        public void Post([FromBody]Candidate candidate)
+        public void Post([FromBody] Candidate candidate)
         {
-            this.candidateRepository.InsertCandidateToDatabase(candidate);
+            try
+            {
+                this.candidateRepository.InsertCandidateToDatabase(candidate);
+            }
+            catch (Exception e)
+            {
+                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Insert failed with message: {e.Message}'"),
+                    ReasonPhrase = ""
+                };
+                throw new HttpResponseException(resp);
+            }
         }
 
         // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
+        public void Put([FromBody] Candidate candidate)
         {
-        }
-
-        // DELETE api/values/5
-        public void Delete(int id)
-        {
+            try
+            {
+                this.candidateRepository.UpdateCandidate(candidate);
+            }
+            catch (Exception e)
+            {
+                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Update candidate failed with message: {e.Message}'"),
+                    ReasonPhrase = ""
+                };
+                throw new HttpResponseException(resp);
+            }
         }
     }
 }
