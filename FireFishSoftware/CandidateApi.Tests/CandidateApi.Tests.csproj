@@ -102,9 +102,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\CandidateControllerTest.cs" />
+    <Compile Include="HelperClasses\TestHelperClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Controllers\HomeControllerTest.cs" />
-    <Compile Include="Controllers\ValuesControllerTest.cs" />
+    <Compile Include="QueryBuilder\TestQueryBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App.config" />
@@ -119,7 +120,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="HelperClasses\" />
     <Folder Include="Repository\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

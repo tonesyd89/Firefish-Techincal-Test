@@ -40,7 +40,7 @@ namespace CandidateApi.Repository
         /// Gets the SQL command.
         /// </summary>
         /// <param name="table">The table.</param>
-        /// <returns></returns>
+        /// <returns>a query string to get the maximum id FROM given table</returns>
         public string GetSqlCommand(Table table)
         {
             return this.GetMaxTableId(table);
@@ -63,7 +63,7 @@ namespace CandidateApi.Repository
 
         private string GetSkillsListQuery()
         {
-            return "SELECT * from [dbo].[Skill]";
+            return "SELECT * FROM [dbo].[Skill]";
         }
 
         private string GetInsertSkillsQuery()
@@ -88,10 +88,10 @@ namespace CandidateApi.Repository
         /// <summary>
         /// Gets the maximum candidate table identifier.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>the query to poll table for its maximum id</returns>
         private string GetMaxTableId(Table table)
         {
-            return "select MAX(Id) Id from " +  Enum.GetName(table.GetType(), table);
+            return "select MAX(Id) Id FROM " +  Enum.GetName(table.GetType(), table);
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace CandidateApi.Repository
         /// <returns></returns>
         private string GetSelectByIdQuery()
         {
-            return "SELECT * from Candidate where id = @Id";
+            return "SELECT * FROM Candidate where id = @Id";
 
         }
 
@@ -170,7 +170,7 @@ namespace CandidateApi.Repository
         /// <returns></returns>
         private string GetSelectAllCommand()
         {
-            return "SELECT * from Candidate";
+            return "SELECT * FROM Candidate";
         }
 
         private string GetCreatedDatequery()

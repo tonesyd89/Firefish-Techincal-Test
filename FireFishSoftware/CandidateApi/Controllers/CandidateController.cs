@@ -32,8 +32,8 @@ namespace CandidateApi.Controllers
         }
 
         // GET api/values
-        public IEnumerable<Candidate> Get()
-    {
+        public IHttpActionResult Get()
+        {
             List<Candidate> candidates = new List<Candidate>();
             try
             {
@@ -41,58 +41,49 @@ namespace CandidateApi.Controllers
             }
             catch (Exception e)
             {
-                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
-                {
-                    Content = new StringContent($"Get response failed. Message: {e.Message}'"),
-                    ReasonPhrase = ""
-                };
-                throw new HttpResponseException(resp);
+                NotFound();
             }
 
-            return candidates;
+            return Ok(candidates);
         }
 
         // GET api/values/5
-        public Candidate Get(int id)
+        public IHttpActionResult Get(int id)
         {
             Candidate candidate = this.candidateRepository.GetCandidateById(id);
-            return candidate;
+            if (candidate == null)
+            {
+                return NotFound();
+            }
+            return Ok(candidate);
         }
 
         // POST api/values
-        public void Post([FromBody] Candidate candidate)
+        public IHttpActionResult Post([FromBody] Candidate candidate)
         {
-            try
+            bool addedTodatabase = false;
+
+            addedTodatabase = this.candidateRepository.InsertCandidateToDatabase(candidate);
+            if (!addedTodatabase)
             {
-                this.candidateRepository.InsertCandidateToDatabase(candidate);
+                return InternalServerError();
             }
-            catch (Exception e)
-            {
-                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
-                {
-                    Content = new StringContent($"Insert failed with message: {e.Message}'"),
-                    ReasonPhrase = ""
-                };
-                throw new HttpResponseException(resp);
-            }
+
+            return CreatedAtRoute("DefaultApi", new {id = candidate.CandidateId}, candidate);
         }
 
         // PUT api/values/5
-        public void Put([FromBody] string id,  Candidate candidate)
+        public IHttpActionResult Put([FromBody] Candidate candidate)
         {
             try
             {
-                this.candidateRepository.UpdateCandidate(id, candidate);
+                this.candidateRepository.UpdateCandidate(candidate);
             }
             catch (Exception e)
             {
-                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
-                {
-                    Content = new StringContent($"Update candidate failed with message: {e.Message}'"),
-                    ReasonPhrase = ""
-                };
-                throw new HttpResponseException(resp);
+                return InternalServerError();
             }
+            return Content(HttpStatusCode.Accepted, candidate);
         }
     }
 }

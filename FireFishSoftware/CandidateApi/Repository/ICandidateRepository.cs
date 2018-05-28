@@ -11,7 +11,7 @@ namespace CandidateApi.Repository
         /// <param name="candidate">The updateCandidate.</param>
         /// <returns>true if updateCandidate added successfully
         ///  false if updateCandidate failed to add </returns>
-        void InsertCandidateToDatabase(Candidate candidate);
+        bool InsertCandidateToDatabase(Candidate candidate);
 
         /// <summary>
         /// Gets all candidates.
@@ -32,7 +32,7 @@ namespace CandidateApi.Repository
         /// <param name="updateCandidate">The updateCandidate.</param>
         /// <returns>True if candidate updated successfully
         /// false if candidate not updated</returns>
-        bool UpdateCandidate(string id, Candidate updateCandidate);
+        bool UpdateCandidate(Candidate updateCandidate);
 
         /// <summary>
         /// Inserts the into candidate skill.

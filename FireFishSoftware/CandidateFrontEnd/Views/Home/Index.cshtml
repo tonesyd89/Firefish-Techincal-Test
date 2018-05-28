@@ -5,11 +5,8 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Index</h2>
+<h2>Candidates</h2>
 
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
 <table class="table">
     <tr>
         <th>
@@ -90,7 +87,6 @@
             @Html.DisplayFor(modelItem => item.UpdatedDate)
         </td>
         <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.CandidateId }) |
             @Html.ActionLink("Details", "Details", new { id=item.CandidateId }) 
         </td>
     </tr>

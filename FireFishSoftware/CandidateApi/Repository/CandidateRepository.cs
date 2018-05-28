@@ -67,7 +67,7 @@ namespace CandidateApi.Repository
         /// <param name="candidate">The updateCandidate.</param>
         /// <returns>true if Candidate added successfully
         ///  false if Candidate failed to add </returns>
-        public void InsertCandidateToDatabase(Candidate candidate)
+        public bool InsertCandidateToDatabase(Candidate candidate)
         {
             try
             {
@@ -75,6 +75,7 @@ namespace CandidateApi.Repository
                 {
                     connection.Open();
                     int candidateId = GetSkillId(Table.Candidate);
+                    candidateId++;
                     candidate.CandidateId = candidateId.ToString();
 
                     using (SqlCommand insertCommand =
@@ -87,10 +88,12 @@ namespace CandidateApi.Repository
                     InsertCandidateSkillToDb(candidate);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                throw e;
+                return false;
             }
+
+            return true;
         }
 
         /// <summary>
@@ -120,13 +123,16 @@ namespace CandidateApi.Repository
             }
         }
 
+        /// <summary>
+        /// Gets the skill identifier.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <returns>the maximum id of the given table </returns>
         private int GetSkillId(Table table)
         {
-            int skillId;
-
             try
             {
-
+                int skillId;
                 using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
                     connection.Open();
@@ -233,24 +239,21 @@ namespace CandidateApi.Repository
         /// Updates the candidate and candidate skills.
         /// </summary>
         /// <param name="updateCandidate">The updateCandidate.</param>
-        /// <returns>True if candidate updated successfully
-        /// false if candidate not updated</returns>
-        public bool UpdateCandidate(string candidateId, Candidate updateCandidate)
+        /// <returns>
+        /// True if candidate updated successfully
+        /// false if candidate not updated
+        /// </returns>
+        public bool UpdateCandidate( Candidate updateCandidate)
         {
             try
             {
-                //string candidateId = updateCandidate.CandidateId;
-                int skillsCount = GetCandidateSkills(candidateId).Count;
-               
+                string candidateId = updateCandidate.CandidateId;
                 using (var connection = new SqlConnection(ConnectionString))
                 {
-                    //if there are more skills associated with the incoming candidate then we know there are new skills to be added. 
-                    if (updateCandidate.Skills.Count > skillsCount)
-                    {
+                    
                         var newCandidateSkills = this.GetNewCandidateSkills(updateCandidate, candidateId);
                         this.InsertCandidateSkillToDb(newCandidateSkills, candidateId);
-                    }
-                
+                    
                     connection.Open();
                     using (SqlCommand cmdUpdatecandidateCommand =
                         new SqlCommand(this._queryBuilder.UpdateCandidate(updateCandidate), connection))
@@ -275,7 +278,7 @@ namespace CandidateApi.Repository
                 }
 
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }
@@ -307,8 +310,6 @@ namespace CandidateApi.Repository
         {
             try
             {
-
-
                 using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
                     connection.Open();

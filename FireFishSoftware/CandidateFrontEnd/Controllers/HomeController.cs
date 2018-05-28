@@ -54,15 +54,15 @@ namespace CandidateFrontEnd.Controllers
             return View(candidate);
         }
 
-        public async Task<ActionResult> Edit(string id, Candidate candidate)
-        {
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri("http://localhost:60946");
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage res = await client.GetAsync($"/api/Candidate/{candidate}");
-            }
-        }
+        //public async Task<ActionResult> Edit(string id, Candidate candidate)
+        //{
+        //    using (var client = new HttpClient())
+        //    {
+        //        client.BaseAddress = new Uri("http://localhost:60946");
+        //        client.DefaultRequestHeaders.Clear();
+        //        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        //        HttpResponseMessage res = await client.GetAsync($"/api/Candidate/{candidate}");
+        //    }
+        //}
         }
 }
